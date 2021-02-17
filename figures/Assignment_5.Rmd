@@ -1,0 +1,78 @@
+---
+title: "Assignment_5"
+author: "Markus Min"
+date: "2/17/2021"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r load_libraries}
+library(here)
+library(tidyverse)
+```
+
+
+```{r load_data}
+dat <- read.csv(here("data","siscowet.csv"))
+```
+
+Let's explore length/weight relationships, and if it differs by location.
+
+
+```{r log_data}
+dat %>% 
+  mutate(ln_len = log(len)) %>% 
+  mutate(ln_wgt = log(wgt)) -> dat
+
+# Let's fit a linear regression to the data
+lm_data <- lm(ln_wgt~ln_len, data = dat)
+lm_data$coefficients
+```
+
+
+### Exploratory plot
+```{r exploratory_plot, fig.height = 4, fig.width = 6, fig.align = "center"}
+ggplot(dat, aes(x = ln_len, y = ln_wgt, color = locID))+
+  geom_point()+
+  # geom_smooth(aes(x = ln_len, y = ln_wgt))
+  geom_abline(intercept = lm_data$coefficients[1], slope = lm_data$coefficients[2])
+
+```
+
+
+### Expository Figure
+```{r expository_figure, fig.height = 4, fig.width = 6, fig.align = "center"}
+# Create colorblind safe color scheme
+loc_colors <- c("Blind Sucker" = "#a6cee3", "Deer Park" = "#1f78b4", 
+                "Grand Marais" = "#b2df8a", "Little Lake Harbor" = "#33a02c")
+
+
+ggplot(dat, aes(x = ln_len, y = ln_wgt, color = locID))+
+  geom_point()+
+  # geom_smooth(aes(x = ln_len, y = ln_wgt))
+  geom_abline(intercept = lm_data$coefficients[1], slope = lm_data$coefficients[2], lty = 2)+
+  ylab("ln(weight (g))")+
+  xlab("ln(length (mm))")+
+  labs(color = "Location")+
+  scale_color_manual(values = loc_colors)+
+  theme(panel.background = element_rect(color = "black", fill = "white"),
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size = 15),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        legend.position = c(0.2, 0.75),
+        legend.box.background = element_rect(color = "black"),
+        legend.key=element_blank())+
+  annotate(geom = "text", x = 6.3, y = 9, hjust = 0, 
+           label = paste0("y = ", round(lm_data$coefficients[2], 3), "x ", round(lm_data$coefficients[1],3)))
+```
+
+
+
+
+
+
+
+
+
